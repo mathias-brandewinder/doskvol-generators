@@ -69,7 +69,7 @@ module App =
             }
 
         let getModel () : Fable.Core.JS.Promise<Data.Model> =
-            Fetch.get (@"https://doskvol.blob.core.windows.net/data/test.json")
+            Fetch.get (@"https://doskvol.blob.core.windows.net/data/citizens.json")
 
         let cmd = Cmd.OfPromise.perform getModel () DataReceived
 
@@ -116,9 +116,10 @@ module App =
                 [
                     Heading.h1 [] [ str "Citizens of Doskvol" ]
                     Heading.h4 [ Heading.IsSubtitle] [
-                      str "Random denizens for "
-                      a [ Href "https://bladesinthedark.com/"; Style [ Color "Red" ] ] [ str "Blades in the Dark"]
-                      ]
+                        str "Random denizens for "
+                        a [ Href "https://bladesinthedark.com/"; Style [ Color "Red" ] ]
+                            [ str "Blades in the Dark"]
+                        ]
                 ]
             ]
 

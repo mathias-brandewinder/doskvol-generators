@@ -712,13 +712,13 @@ module DataModel =
 
 DataModel.testModel
 |> fun x -> Encode.Auto.toString(0, x)
-|> fun x -> File.WriteAllText(Path.Combine(__SOURCE_DIRECTORY__, "test.json"), x)
+|> fun x -> File.WriteAllText(Path.Combine(__SOURCE_DIRECTORY__, "citizens.json"), x)
 
 #load @"../src/Combinators.fs"
 open Doskvol
 
 let pickers =
-    Path.Combine(__SOURCE_DIRECTORY__, "test.json")
+    Path.Combine(__SOURCE_DIRECTORY__, "citizens.json")
     |> File.ReadAllText
     |> Decode.Auto.fromString<Data.Model>
     |> fun x ->
