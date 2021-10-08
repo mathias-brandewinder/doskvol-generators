@@ -1,18 +1,26 @@
-#r "nuget: NewtonSoft.Json"
+#r "nuget: Thoth.Json.Net"
+open Thoth.Json.Net
 
-open Newtonsoft.Json
+type Distribution =
+    | Flat of list<string>
+    | Weighted of list<float * string>
+
+type Source = {
+    Name: string
+    Items: Distribution
+    }
 
 [<CLIMutable>]
 type Attributes = {
     Category: string
-    Choices: string []
+    Choices: list<string>
     }
 
 module Blades =
 
     let looks = {
-        Category = "look"
-        Choices = [|
+        Name = "look"
+        Items = Flat [
             "large"
             "lovely"
             "weathered"
@@ -54,12 +62,12 @@ module Blades =
             "shorn"
             "bald"
             "tattoed"
-            |]
+            ]
         }
 
     let goals = {
-        Category = "goal"
-        Choices = [|
+        Name = "goal"
+        Items = Flat [
             "wealth"
             "power"
             "authority"
@@ -81,12 +89,12 @@ module Blades =
             "destruction"
             "justice"
             "cooperation"
-            |]
+            ]
         }
 
     let methods = {
-        Category = "method"
-        Choices = [|
+        Name = "method"
+        Items = Flat [
             "violence"
             "threats"
             "negotiation"
@@ -106,12 +114,12 @@ module Blades =
             "teamwork"
             "espionage"
             "chaos"
-            |]
+            ]
         }
 
     let styles = {
-        Category = "style"
-        Choices = [|
+        Name = "style"
+        Items = Flat [
             "tricorn hat"
             "long coat"
             "hood & veil"
@@ -149,12 +157,12 @@ module Blades =
             "crutches"
             "cane"
             "wheelchair"
-            |]
+            ]
         }
 
     let traits = {
-        Category = "trait"
-        Choices = [|
+        Name = "trait"
+        Items = Flat [
             "charming"
             "cold"
             "cavalier"
@@ -191,12 +199,12 @@ module Blades =
             "melancholy"
             "enigmatic"
             "calm"
-            |]
+            ]
         }
 
     let interests = {
-        Category = "interest"
-        Choices = [|
+        Name = "interest"
+        Items = Flat [
             "fine whiskey"
             "fine wine"
             "fine beer"
@@ -268,12 +276,12 @@ module Blades =
             "medicine"
             "demon lore"
             "pre cataclysm legends"
-            |]
+            ]
         }
 
     let quirks = {
-        Category = "quirk"
-        Choices = [|
+        Name = "quirk"
+        Items = Flat [
             "superstitious"
             "believes in signs"
             "believes in magic numbers"
@@ -314,12 +322,12 @@ module Blades =
             "blindly faithful to ideal"
             "deeply traditional, opposed to new ideas"
             "fraud, fabricated life"
-            |]
+            ]
         }
 
     let names = {
-        Category = "name"
-        Choices = [|
+        Name = "name"
+        Items = Flat [
             "Aldric"
             "Aldo"
             "Amosen"
@@ -400,12 +408,12 @@ module Blades =
             "Weaver"
             "Wester"
             "Zamira"
-            |]
+            ]
         }
 
     let familyNames = {
-        Category = "family name"
-        Choices = [|
+        Name = "family name"
+        Items = Flat [
             "Ankhayat"
             "Arran"
             "Athanoch"
@@ -454,12 +462,12 @@ module Blades =
             "Vale"
             "Walund"
             "Welker"
-            |]
+            ]
         }
 
     let aliases = {
-        Category = "Alias"
-        Choices = [|
+        Name = "Alias"
+        Items = Flat [
             "Bell"
             "Birch"
             "Bricks"
@@ -498,30 +506,30 @@ module Blades =
             "Vixen"
             "Whip"
             "Wicker"
-            |]
+            ]
         }
 
-    let heritages = {
-        Category = "heritage"
-        Choices = [|
+    let local = {
+        Name = "local"
+        Items = Flat [
             "Akorosi"
-            "Akorosi"
-            "Akorosi"
-            "Akorosi"
-            "Akorosi"
-            "Akorosi"
-            "Skovlander"
-            "Skovlander"
-            "Iruvian"
-            "Dagger Islander"
-            "Severosi"
-            "Tycherosi"
-            |]
+            ]
+        }
+
+    let foreigner = {
+        Name = "foreigner"
+        Items = Weighted [
+            2.0, "Skovlander"
+            1.0, "Iruvian"
+            1.0, "Dagger Islander"
+            1.0, "Severosi"
+            1.0, "Tycherosi"
+            ]
         }
 
     let commonProfessions = {
-        Category = "profession, common"
-        Choices = [|
+        Name = "profession, common"
+        Items = Flat [
             "baker"
             "barber"
             "blacksmith"
@@ -558,12 +566,12 @@ module Blades =
             "goat heard"
             "messenger"
             "sailor"
-            |]
+            ]
         }
 
     let rareProfessions = {
-        Category = "profession, rare"
-        Choices = [|
+        Name = "profession, rare"
+        Items = Flat [
             "advocate"
             "architect"
             "artist"
@@ -600,64 +608,134 @@ module Blades =
             "explorer"
             "rail jack"
             "soldier"
-            |]
+            ]
         }
 
-    let professions = {
-        Category = "profession"
-        Choices =
-            [|
-                yield!
-                    commonProfessions.Choices
-                    |> Array.collect (Array.replicate 5)
-                yield! rareProfessions.Choices
-            |]
-        }
+// type Sources = {
+//     Names: Source
+//     Aliases: Source
+//     FamilyNames: Source
+//     LocalHeritages: Source
+//     ForeignHeritages: Source
+//     CommonProfessions: Source
+//     RareProfessions: Source
+//     Looks: Source
+//     Styles: Source
+//     Goals: Source
+//     Methods: Source
+//     Traits: Source
+//     Interests: Source
+//     Quirks: Source
+//     }
 
-[<CLIMutable>]
-type Generator = {
-    Names: Attributes
-    Aliases: Attributes
-    FamilyNames: Attributes
-    Heritages: Attributes
-    Professions: Attributes
-    Looks: Attributes
-    Styles: Attributes
-    Goals: Attributes
-    Methods: Attributes
-    Traits: Attributes
-    Interests: Attributes
-    Quirks: Attributes
-    }
-
-let peopleGenerator: Generator = {
-    Names = Blades.names
-    Aliases = Blades.aliases
-    FamilyNames = Blades.familyNames
-    Heritages = Blades.heritages
-    Professions = Blades.professions
-    Looks = Blades.looks
-    Styles = Blades.styles
-    Goals = Blades.goals
-    Methods = Blades.methods
-    Traits = Blades.traits
-    Interests = Blades.interests
-    Quirks = Blades.quirks
-    }
+// let peopleSource: Sources = {
+//     Names = Blades.names
+//     Aliases = Blades.aliases
+//     FamilyNames = Blades.familyNames
+//     LocalHeritages = Blades.local
+//     ForeignHeritages = Blades.foreigner
+//     CommonProfessions = Blades.commonProfessions
+//     RareProfessions = Blades.rareProfessions
+//     Looks = Blades.looks
+//     Styles = Blades.styles
+//     Goals = Blades.goals
+//     Methods = Blades.methods
+//     Traits = Blades.traits
+//     Interests = Blades.interests
+//     Quirks = Blades.quirks
+//     }
 
 open System.IO
 
-let save () =
-    peopleGenerator
-    |> JsonConvert.SerializeObject
-    |> fun data ->
-        File.WriteAllText(
-            Path.Combine(__SOURCE_DIRECTORY__,"people.json"),
-            data
-            )
+module DataModel =
 
-// test
-let rehydrated =
-    Path.Combine(__SOURCE_DIRECTORY__,"people.json")
+    type Expression =
+        | Source of string
+        | Composite of string
+        | Or of list<float * Expression>
+        | Maybe of float * Expression
+
+    type NamedDefinition = {
+        Name: string
+        Definition: Expression
+        }
+
+    type Model = {
+        Sources: list<Source>
+        Definitions: list<NamedDefinition>
+        }
+
+    let testModel =
+        let sources = [
+            Blades.names
+            Blades.aliases
+            Blades.familyNames
+            Blades.local
+            Blades.foreigner
+            Blades.commonProfessions
+            Blades.rareProfessions
+            Blades.looks
+            Blades.styles
+            Blades.goals
+            Blades.methods
+            Blades.traits
+            Blades.interests
+            Blades.quirks
+            ]
+        let definitions = [
+            {
+                Name = "heritage"
+                Definition =
+                    Or [
+                        0.5, Source Blades.local.Name
+                        0.5, Source Blades.foreigner.Name
+                        ]
+            }
+            {
+                Name = "profession"
+                Definition =
+                    Or [
+                        5.0, Source Blades.commonProfessions.Name
+                        1.0, Source Blades.rareProfessions.Name
+                        ]
+            }
+            {
+                Name = "alias"
+                Definition = Maybe (0.2, Source Blades.aliases.Name)
+            }
+            ]
+        let model = {
+            Sources = sources
+            Definitions = definitions
+            }
+        model
+
+DataModel.testModel
+|> fun x -> Encode.Auto.toString(0, x)
+|> fun x -> File.WriteAllText(Path.Combine(__SOURCE_DIRECTORY__, "test.json"), x)
+
+#load @"../src/Combinators.fs"
+open Doskvol
+
+let pickers =
+    Path.Combine(__SOURCE_DIRECTORY__, "test.json")
     |> File.ReadAllText
-    |> JsonConvert.DeserializeObject<Generator>
+    |> Decode.Auto.fromString<Data.Model>
+    |> fun x ->
+        match x with
+        | Ok data -> data |> Data.read
+        | Error _ -> failwith "boom"
+
+let rng: RNG =
+    let x = System.Random ()
+    fun () -> x.NextDouble ()
+
+pickers.["heritage"] |> Picker.pick rng
+pickers.["foreigner"] |> Picker.pick rng
+pickers.["alias"] |> Picker.pick rng
+
+Array.init 10000 (fun _ -> pickers.["heritage"] |> Picker.pick rng)
+|> Array.countBy id
+
+Array.init 10000 (fun _ -> pickers.["profession"] |> Picker.pick rng)
+|> Array.countBy id

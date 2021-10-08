@@ -84,7 +84,7 @@ module Data =
         NamedDefinitions: Map<string, Expression>
         }
         with
-        static member From(model: Model) =
+        static member From (model: Model) =
             // TODO validate unicity of names
             {
                 NamedSources =

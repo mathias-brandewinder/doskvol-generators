@@ -9,25 +9,12 @@ module App =
     open Fable.React.Props
     open Fulma
     open Thoth.Fetch
+    open Doskvol
+    open Doskvol.Data
 
     type Attributes = {
         Category: string
-        Choices: string []
-        }
-
-    type Generator = {
-        Names: Attributes
-        Aliases: Attributes
-        FamilyNames: Attributes
-        Heritages: Attributes
-        Professions: Attributes
-        Looks: Attributes
-        Styles: Attributes
-        Goals: Attributes
-        Methods: Attributes
-        Traits: Attributes
-        Interests: Attributes
-        Quirks: Attributes
+        Choices: list<string>
         }
 
     type NPC = {
@@ -37,72 +24,66 @@ module App =
         Attributes: list<string * string>
         }
 
-    type Select (rng: Random) =
-        new () = Select(Random())
-        new (seed: int) = Select(Random(seed))
-        member this.From (xs: 'T []) =
-            let len = xs |> Array.length
-            xs |> Array.item (rng.Next(0, len))
-        member this.Maybe p x =
-            let roll = rng.NextDouble()
-            if roll <= p
-            then Some x
-            else None
+    let rng =
+        let random = Random ()
+        fun () -> random.NextDouble()
 
-    let npc (generator: Generator) : NPC =
+    let attribute (pickers: Map<string,Picker>) name =
+        name,
+        pickers.[name]
+        |> Picker.pick rng
+        |> Option.get
 
-        let pick = Select()
-        let select =
-            fun (x: Attributes) ->
-                x.Category, pick.From x.Choices
-
+    let npc (pickers: Map<string,Picker>) : NPC =
         {
-            Name = generator.Names.Choices |> pick.From
-            Alias = generator.Aliases.Choices |> pick.From |> pick.Maybe 0.2
-            FamilyName = generator.FamilyNames.Choices |> pick.From
+            Name = pickers.["name"] |> Picker.pick rng |> Option.get //.From
+            Alias = pickers.["alias"] |> Picker.pick rng
+            FamilyName = pickers.["family name"] |> Picker.pick rng |> Option.get
             Attributes = [
-                generator.Heritages |> select
-                generator.Professions |> select
-                generator.Looks |> select
-                generator.Styles |> select
-                generator.Goals |> select
-                generator.Methods |> select
-                generator.Traits |> select
-                generator.Interests |> select
-                generator.Quirks |> select
+                attribute pickers "heritage"
+                attribute pickers "profession"
+                attribute pickers "look"
+                attribute pickers "style"
+                attribute pickers "goal"
+                attribute pickers "method"
+                attribute pickers "trait"
+                attribute pickers "interest"
+                attribute pickers "quirk"
                 ]
         }
 
     type Model = {
-        Generator: Option<Generator>
+        Data: Option<Map<string, Picker>>
         NPC: Option<NPC>
         }
 
     type Msg =
         | Roll
-        | DataReceived of Generator
+        | DataReceived of Data.Model
 
     let init() =
+
         let model : Model = {
-            Generator = None
+            Data = None
             NPC = None
             }
 
-        let getCards () : Fable.Core.JS.Promise<Generator> =
-            Fetch.get (@"https://doskvol.blob.core.windows.net/data/people.json")
+        let getModel () : Fable.Core.JS.Promise<Data.Model> =
+            Fetch.get (@"https://doskvol.blob.core.windows.net/data/test.json")
 
-        let cmd = Cmd.OfPromise.perform getCards () DataReceived
+        let cmd = Cmd.OfPromise.perform getModel () DataReceived
 
         model, cmd
 
     let update (msg: Msg) (model: Model) =
         match msg with
         | Roll ->
-            { model with NPC = model.Generator |> Option.map npc },
+            { model with NPC = model.Data |> Option.map npc },
             Cmd.none
-        | DataReceived generator ->
+        | DataReceived data ->
+            let pickers = data |> read
             {
-                Generator = Some generator
+                Data = Some pickers
                 NPC = None
             },
             Cmd.ofMsg Roll
@@ -130,49 +111,15 @@ module App =
             ]
 
     let hero () =
-        Container.container [ ]
-            [
-                Hero.hero [ ]
-                    [
-                        Hero.body [ ]
-                            [
-                                Heading.h1 [ ] [ str "Citizens of Doskvol" ]
-                                Heading.h4 [ Heading.IsSubtitle]
-                                    [
-                                        str "Random denizens for "
-                                        a [ Href "https://bladesinthedark.com/"; Style [ Color "Red" ] ] [ str "Blades in the Dark"]
-                                    ]
-                            ]
-                    ]
-            ]
-
-    let card model dispatch =
-        Section.section [ ]
-            [
-                Box.box' [ ]
-                    [
-                        Heading.h1 [ ]
-                            [
-                                match model.NPC with
-                                | None -> str ""
-                                | Some character ->
-                                    str (character.Name + " " + (formatAlias character.Alias) + " " + character.FamilyName)
-                            ]
-
-                        div [ ]
-                            [
-                                Field.div [ Field.IsGroupedMultiline ]
-                                    [
-                                        match model.NPC with
-                                        | None -> ignore ()
-                                        | Some character ->
-                                            for desc in character.Attributes ->
-                                                renderTag desc
-                                    ]
-                            ]
-                    ]
-                Button.button [ Button.IsLight; Button.OnClick (fun _ -> dispatch Roll) ]
-                    [ str "Roll" ]
+        Hero.hero []
+            [ Hero.body []
+                [
+                    Heading.h1 [] [ str "Citizens of Doskvol" ]
+                    Heading.h4 [ Heading.IsSubtitle] [
+                      str "Random denizens for "
+                      a [ Href "https://bladesinthedark.com/"; Style [ Color "Red" ] ] [ str "Blades in the Dark"]
+                      ]
+                ]
             ]
 
     let view (model:Model) dispatch =
@@ -181,8 +128,39 @@ module App =
             [
                 Column.column [ Column.Width (Screen.All, Column.IsHalf) ]
                     [
-                        hero ()
-                        card model dispatch
+                        Container.container []
+                            [
+                                hero ()
+                            ]
+
+                        Section.section [ ]
+                            [
+                                Box.box' [ ]
+                                    [
+                                        Heading.h1 [ ]
+                                            [
+                                                match model.NPC with
+                                                | None -> str ""
+                                                | Some character ->
+                                                    str (character.Name + " " + (formatAlias character.Alias) + " " + character.FamilyName)
+                                            ]
+
+                                        div []
+                                            [
+                                                Field.div [ Field.IsGroupedMultiline ]
+                                                    [
+                                                    match model.NPC with
+                                                    | None -> ignore ()
+                                                    | Some character ->
+                                                        for desc in character.Attributes ->
+                                                          renderTag desc
+                                                    ]
+                                            ]
+                                    ]
+
+                                Button.button [ Button.IsLight; Button.OnClick (fun _ -> dispatch Roll) ]
+                                    [ str "Roll" ]
+                            ]
                     ]
             ]
 
